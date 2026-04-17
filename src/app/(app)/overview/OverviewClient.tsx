@@ -3,15 +3,9 @@ import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { formatCurrency } from "@/lib/utils";
 
-const PieChart = dynamic(() => import("recharts").then(m => m.PieChart), { ssr: false });
-const Pie = dynamic(() => import("recharts").then(m => m.Pie), { ssr: false });
-const Cell = dynamic(() => import("recharts").then(m => m.Cell), { ssr: false });
-const Tooltip = dynamic(() => import("recharts").then(m => m.Tooltip), { ssr: false });
-const BarChart = dynamic(() => import("recharts").then(m => m.BarChart), { ssr: false });
-const Bar = dynamic(() => import("recharts").then(m => m.Bar), { ssr: false });
-const XAxis = dynamic(() => import("recharts").then(m => m.XAxis), { ssr: false });
-const YAxis = dynamic(() => import("recharts").then(m => m.YAxis), { ssr: false });
-const ResponsiveContainer = dynamic(() => import("recharts").then(m => m.ResponsiveContainer), { ssr: false });
+const ExpenseDonut = dynamic(() => import("./OverviewCharts").then(m => m.ExpenseDonut), { ssr: false });
+const IncomeDonut = dynamic(() => import("./OverviewCharts").then(m => m.IncomeDonut), { ssr: false });
+const DailyBar = dynamic(() => import("./OverviewCharts").then(m => m.DailyBar), { ssr: false });
 
 interface Tx {
   id: string;
@@ -35,7 +29,6 @@ interface Props {
 }
 
 const MONTH_NAMES = ["Januari","Februari","Mars","April","Maj","Juni","Juli","Augusti","September","Oktober","November","December"];
-const FALLBACK_COLORS = ["#6366f1","#f59e0b","#22c55e","#ef4444","#3b82f6","#ec4899","#14b8a6","#8b5cf6","#f97316","#06b6d4"];
 
 export default function OverviewClient({ transactions, categories, hasHousehold }: Props) {
   const now = new Date();
@@ -47,8 +40,7 @@ export default function OverviewClient({ transactions, categories, hasHousehold 
     else setMonth(m => m - 1);
   }
   function nextMonth() {
-    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
-    if (isCurrentMonth) return;
+    if (year === now.getFullYear() && month === now.getMonth()) return;
     if (month === 11) { setMonth(0); setYear(y => y + 1); }
     else setMonth(m => m + 1);
   }
@@ -148,32 +140,7 @@ export default function OverviewClient({ transactions, categories, hasHousehold 
       {expenseByCategory.length > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm">
           <h2 className="font-semibold text-sm mb-4 dark:text-slate-200">Utgifter per kategori</h2>
-          <div className="flex flex-col items-center">
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={expenseByCategory} dataKey="amount" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2}>
-                  {expenseByCategory.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(val: number) => formatCurrency(val)} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="w-full space-y-2 mt-2">
-              {expenseByCategory.map((entry, i) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
-                    <span className="dark:text-slate-300">{entry.icon} {entry.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 dark:text-slate-500">{totalExpense > 0 ? Math.round((entry.amount / totalExpense) * 100) : 0}%</span>
-                    <span className="font-medium dark:text-slate-200">{formatCurrency(entry.amount)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ExpenseDonut data={expenseByCategory} total={totalExpense} />
         </div>
       )}
 
@@ -181,32 +148,7 @@ export default function OverviewClient({ transactions, categories, hasHousehold 
       {incomeBySource.length > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm">
           <h2 className="font-semibold text-sm mb-4 dark:text-slate-200">Inkomster per källa</h2>
-          <div className="flex flex-col items-center">
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={incomeBySource} dataKey="amount" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2}>
-                  {incomeBySource.map((_, i) => (
-                    <Cell key={i} fill={FALLBACK_COLORS[i % FALLBACK_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(val: number) => formatCurrency(val)} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="w-full space-y-2 mt-2">
-              {incomeBySource.map((entry, i) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: FALLBACK_COLORS[i % FALLBACK_COLORS.length] }} />
-                    <span className="dark:text-slate-300 truncate max-w-[160px]">{entry.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 dark:text-slate-500">{totalIncome > 0 ? Math.round((entry.amount / totalIncome) * 100) : 0}%</span>
-                    <span className="font-medium dark:text-slate-200">{formatCurrency(entry.amount)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <IncomeDonut data={incomeBySource} total={totalIncome} />
         </div>
       )}
 
@@ -214,22 +156,7 @@ export default function OverviewClient({ transactions, categories, hasHousehold 
       {monthTxs.length > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm">
           <h2 className="font-semibold text-sm mb-4 dark:text-slate-200">Daglig aktivitet</h2>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={dailyData} barSize={6} barGap={1}>
-              <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#9ca3af" }} tickLine={false} axisLine={false} interval={4} />
-              <YAxis hide />
-              <Tooltip
-                formatter={(val: number, name: string) => [formatCurrency(val), name === "income" ? "Inkomst" : "Utgift"]}
-                labelFormatter={(d: number) => `Dag ${d}`}
-              />
-              <Bar dataKey="expense" fill="#ef4444" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="income" fill="#22c55e" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="flex gap-4 mt-2 justify-center">
-            <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-400"><span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block" />Utgift</span>
-            <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-400"><span className="w-2.5 h-2.5 rounded-sm bg-green-500 inline-block" />Inkomst</span>
-          </div>
+          <DailyBar data={dailyData} />
         </div>
       )}
 
