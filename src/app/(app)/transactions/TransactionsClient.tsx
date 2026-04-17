@@ -5,7 +5,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrency, formatDate, MONTH_NAMES, FREQ_LABELS } from "@/lib/utils";
 import type { Transaction, BudgetCategory, RecurringTransaction } from "@/lib/types";
-import Avatar from "@/components/ui/Avatar";
 
 interface Props {
   initialTransactions: Transaction[];
@@ -19,6 +18,121 @@ const EMPTY_FORM = { description: "", amount: "", type: "expense" as "income"|"e
 const EMPTY_REC = { description: "", amount: "", type: "expense" as "income"|"expense", category_id: "", frequency: "monthly" as "weekly"|"monthly"|"yearly", day_of_month: 1, month_of_year: 1, start_date: new Date().toISOString().split("T")[0], end_date: "" };
 
 const INPUT = "w-full border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500";
+
+// --- Sub-components defined OUTSIDE the main component to prevent remount on each render ---
+
+interface TxFormProps {
+  form: typeof EMPTY_FORM;
+  setForm: React.Dispatch<React.SetStateAction<typeof EMPTY_FORM>>;
+  categories: BudgetCategory[];
+  saving: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  label: string;
+}
+
+function TxForm({ form, setForm, categories, saving, onSubmit, label }: TxFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600">
+        {(["expense","income"] as const).map(t => (
+          <button key={t} type="button" onClick={() => setForm(f=>({...f,type:t}))}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${form.type===t ? (t==="expense"?"bg-red-500 text-white":"bg-green-500 text-white") : "text-gray-500 dark:text-slate-400"}`}>
+            {t==="expense"?"Utgift":"Inkomst"}
+          </button>
+        ))}
+      </div>
+      <input type="text" value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} required placeholder="Beskrivning" className={INPUT} />
+      <input type="number" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} required min="0.01" step="0.01" placeholder="Belopp (SEK)" className={INPUT} />
+      <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT} />
+      {categories.length > 0 && (
+        <select value={form.category_id} onChange={e=>setForm(f=>({...f,category_id:e.target.value}))} className={INPUT}>
+          <option value="">Ingen kategori</option>
+          {categories.map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+        </select>
+      )}
+      <button type="submit" disabled={saving} className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold rounded-xl py-3 transition-colors">
+        {saving?"Sparar...":label}
+      </button>
+    </form>
+  );
+}
+
+interface RecFormProps {
+  recForm: typeof EMPTY_REC;
+  setRecForm: React.Dispatch<React.SetStateAction<typeof EMPTY_REC>>;
+  categories: BudgetCategory[];
+  saving: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  label: string;
+}
+
+function RecForm({ recForm, setRecForm, categories, saving, onSubmit, label }: RecFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600">
+        {(["expense","income"] as const).map(t => (
+          <button key={t} type="button" onClick={() => setRecForm(f=>({...f,type:t}))}
+            className={`flex-1 py-2.5 text-sm font-medium ${recForm.type===t ? (t==="expense"?"bg-red-500 text-white":"bg-green-500 text-white") : "text-gray-500 dark:text-slate-400"}`}>
+            {t==="expense"?"Utgift":"Inkomst"}
+          </button>
+        ))}
+      </div>
+      <input type="text" value={recForm.description} onChange={e=>setRecForm(f=>({...f,description:e.target.value}))} required placeholder="T.ex. Hyra, Lön, Spotify" className={INPUT} />
+      <input type="number" value={recForm.amount} onChange={e=>setRecForm(f=>({...f,amount:e.target.value}))} required min="0.01" step="0.01" placeholder="Belopp (SEK)" className={INPUT} />
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Frekvens</label>
+        <select value={recForm.frequency} onChange={e=>setRecForm(f=>({...f,frequency:e.target.value as "weekly"|"monthly"|"yearly"}))} className={INPUT}>
+          <option value="weekly">Varje vecka</option>
+          <option value="monthly">Varje månad</option>
+          <option value="yearly">Varje år</option>
+        </select>
+      </div>
+      {recForm.frequency !== "weekly" && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Dag i månaden (1–28)</label>
+          <input type="number" value={recForm.day_of_month} min={1} max={28} onChange={e=>setRecForm(f=>({...f,day_of_month:parseInt(e.target.value)}))} className={INPUT} />
+        </div>
+      )}
+      {recForm.frequency === "yearly" && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Månad</label>
+          <select value={recForm.month_of_year} onChange={e=>setRecForm(f=>({...f,month_of_year:parseInt(e.target.value)}))} className={INPUT}>
+            {MONTH_NAMES.map((m,i)=><option key={i} value={i+1}>{m}</option>)}
+          </select>
+        </div>
+      )}
+      {categories.length > 0 && (
+        <select value={recForm.category_id} onChange={e=>setRecForm(f=>({...f,category_id:e.target.value}))} className={INPUT}>
+          <option value="">Ingen kategori</option>
+          {categories.map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+        </select>
+      )}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Slutdatum (valfritt)</label>
+        <input type="date" value={recForm.end_date} onChange={e=>setRecForm(f=>({...f,end_date:e.target.value}))} className={INPUT} />
+      </div>
+      <button type="submit" disabled={saving} className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold rounded-xl py-3 transition-colors">
+        {saving?"Sparar...":label}
+      </button>
+    </form>
+  );
+}
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end">
+      <div className="bg-white dark:bg-slate-800 w-full rounded-t-3xl p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold dark:text-slate-100">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 text-2xl">&times;</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// --- Main component ---
 
 export default function TransactionsClient({ initialTransactions, categories, initialRecurring, householdId, userId }: Props) {
   const router = useRouter();
@@ -137,93 +251,6 @@ export default function TransactionsClient({ initialTransactions, categories, in
     await supabase.from("recurring_transactions").delete().eq("id", id);
     setRecurring(prev => prev.filter(r => r.id !== id));
   }
-
-  const TxForm = ({ onSubmit, label }: { onSubmit: (e: React.FormEvent) => void; label: string }) => (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600">
-        {(["expense","income"] as const).map(t => (
-          <button key={t} type="button" onClick={() => setForm(f=>({...f,type:t}))}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${form.type===t ? (t==="expense"?"bg-red-500 text-white":"bg-green-500 text-white") : "text-gray-500 dark:text-slate-400"}`}>
-            {t==="expense"?"Utgift":"Inkomst"}
-          </button>
-        ))}
-      </div>
-      <input type="text" value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} required placeholder="Beskrivning" className={INPUT} />
-      <input type="number" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} required min="0.01" step="0.01" placeholder="Belopp (SEK)" className={INPUT} />
-      <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT} />
-      {categories.length > 0 && (
-        <select value={form.category_id} onChange={e=>setForm(f=>({...f,category_id:e.target.value}))} className={INPUT}>
-          <option value="">Ingen kategori</option>
-          {categories.map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-        </select>
-      )}
-      <button type="submit" disabled={saving} className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold rounded-xl py-3 transition-colors">
-        {saving?"Sparar...":label}
-      </button>
-    </form>
-  );
-
-  const RecForm = ({ onSubmit, label }: { onSubmit: (e: React.FormEvent) => void; label: string }) => (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600">
-        {(["expense","income"] as const).map(t => (
-          <button key={t} type="button" onClick={() => setRecForm(f=>({...f,type:t}))}
-            className={`flex-1 py-2.5 text-sm font-medium ${recForm.type===t ? (t==="expense"?"bg-red-500 text-white":"bg-green-500 text-white") : "text-gray-500 dark:text-slate-400"}`}>
-            {t==="expense"?"Utgift":"Inkomst"}
-          </button>
-        ))}
-      </div>
-      <input type="text" value={recForm.description} onChange={e=>setRecForm(f=>({...f,description:e.target.value}))} required placeholder="T.ex. Hyra, Lön, Spotify" className={INPUT} />
-      <input type="number" value={recForm.amount} onChange={e=>setRecForm(f=>({...f,amount:e.target.value}))} required min="0.01" step="0.01" placeholder="Belopp (SEK)" className={INPUT} />
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Frekvens</label>
-        <select value={recForm.frequency} onChange={e=>setRecForm(f=>({...f,frequency:e.target.value as "weekly"|"monthly"|"yearly"}))} className={INPUT}>
-          <option value="weekly">Varje vecka</option>
-          <option value="monthly">Varje månad</option>
-          <option value="yearly">Varje år</option>
-        </select>
-      </div>
-      {recForm.frequency !== "weekly" && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Dag i månaden (1–28)</label>
-          <input type="number" value={recForm.day_of_month} min={1} max={28} onChange={e=>setRecForm(f=>({...f,day_of_month:parseInt(e.target.value)}))} className={INPUT} />
-        </div>
-      )}
-      {recForm.frequency === "yearly" && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Månad</label>
-          <select value={recForm.month_of_year} onChange={e=>setRecForm(f=>({...f,month_of_year:parseInt(e.target.value)}))} className={INPUT}>
-            {MONTH_NAMES.map((m,i)=><option key={i} value={i+1}>{m}</option>)}
-          </select>
-        </div>
-      )}
-      {categories.length > 0 && (
-        <select value={recForm.category_id} onChange={e=>setRecForm(f=>({...f,category_id:e.target.value}))} className={INPUT}>
-          <option value="">Ingen kategori</option>
-          {categories.map(c=><option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-        </select>
-      )}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Slutdatum (valfritt)</label>
-        <input type="date" value={recForm.end_date} onChange={e=>setRecForm(f=>({...f,end_date:e.target.value}))} className={INPUT} />
-      </div>
-      <button type="submit" disabled={saving} className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold rounded-xl py-3 transition-colors">
-        {saving?"Sparar...":label}
-      </button>
-    </form>
-  );
-
-  const Modal = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-end">
-      <div className="bg-white dark:bg-slate-800 w-full rounded-t-3xl p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold dark:text-slate-100">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 text-2xl">&times;</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
 
   return (
     <div className="px-4 pt-6 max-w-lg mx-auto">
@@ -363,10 +390,26 @@ export default function TransactionsClient({ initialTransactions, categories, in
         </div>
       )}
 
-      {showAdd && <Modal title="Ny transaktion" onClose={() => setShowAdd(false)}><TxForm onSubmit={handleAdd} label="Lägg till" /></Modal>}
-      {editTx && <Modal title="Redigera transaktion" onClose={() => setEditTx(null)}><TxForm onSubmit={handleEdit} label="Spara ändringar" /></Modal>}
-      {showRecModal && <Modal title="Ny återkommande" onClose={() => setShowRecModal(false)}><RecForm onSubmit={handleAddRec} label="Skapa återkommande" /></Modal>}
-      {editRec && <Modal title="Redigera återkommande" onClose={() => setEditRec(null)}><RecForm onSubmit={handleEditRec} label="Spara ändringar" /></Modal>}
+      {showAdd && (
+        <Modal title="Ny transaktion" onClose={() => setShowAdd(false)}>
+          <TxForm form={form} setForm={setForm} categories={categories} saving={saving} onSubmit={handleAdd} label="Lägg till" />
+        </Modal>
+      )}
+      {editTx && (
+        <Modal title="Redigera transaktion" onClose={() => setEditTx(null)}>
+          <TxForm form={form} setForm={setForm} categories={categories} saving={saving} onSubmit={handleEdit} label="Spara ändringar" />
+        </Modal>
+      )}
+      {showRecModal && (
+        <Modal title="Ny återkommande" onClose={() => setShowRecModal(false)}>
+          <RecForm recForm={recForm} setRecForm={setRecForm} categories={categories} saving={saving} onSubmit={handleAddRec} label="Skapa återkommande" />
+        </Modal>
+      )}
+      {editRec && (
+        <Modal title="Redigera återkommande" onClose={() => setEditRec(null)}>
+          <RecForm recForm={recForm} setRecForm={setRecForm} categories={categories} saving={saving} onSubmit={handleEditRec} label="Spara ändringar" />
+        </Modal>
+      )}
     </div>
   );
 }
