@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   if (profile?.household_id) {
     const { data } = await supabase
       .from("profiles")
-      .select("display_name, avatar_color")
+      .select("display_name, avatar_color, avatar_url")
       .eq("household_id", profile.household_id)
       .neq("id", user!.id)
       .single();

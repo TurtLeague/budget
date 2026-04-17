@@ -4,15 +4,11 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-* {
-  -webkit-tap-highlight-color: transparent;
-}
+* { -webkit-tap-highlight-color: transparent; }
 
 body {
-  @apply bg-gray-50 text-gray-900 font-sans;
+  @apply bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-slate-100 font-sans transition-colors duration-200;
   overscroll-behavior: none;
 }
 
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 1rem);
-}
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 1rem); }
