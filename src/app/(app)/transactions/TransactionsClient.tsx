@@ -186,21 +186,19 @@ export default function TransactionsClient({ initialTransactions, categories, in
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault(); if (!householdId) return; setSaving(true);
     const supabase = createClient();
-    const { data, error } = await supabase.from("transactions")
-      .insert({ household_id: householdId, created_by: userId, description: form.description, amount: parseFloat(form.amount), type: form.type, category_id: form.category_id||null, date: form.date })
-      .select("*, profiles(display_name, avatar_color, avatar_url), budget_categories(name, color, icon)").single();
-    if (!error && data) { setTransactions(prev => [data as Transaction, ...prev].sort((a,b) => b.date.localeCompare(a.date))); setShowAdd(false); setForm(EMPTY_FORM); }
+    const { error } = await supabase.from("transactions")
+      .insert({ household_id: householdId, created_by: userId, description: form.description, amount: parseFloat(form.amount), type: form.type, category_id: form.category_id||null, date: form.date });
+    if (!error) { setShowAdd(false); setForm(EMPTY_FORM); router.refresh(); }
     setSaving(false);
   }
 
   async function handleEdit(e: React.FormEvent) {
     e.preventDefault(); if (!editTx) return; setSaving(true);
     const supabase = createClient();
-    const { data, error } = await supabase.from("transactions")
+    const { error } = await supabase.from("transactions")
       .update({ description: form.description, amount: parseFloat(form.amount), type: form.type, category_id: form.category_id||null, date: form.date })
-      .eq("id", editTx.id)
-      .select("*, profiles(display_name, avatar_color, avatar_url), budget_categories(name, color, icon)").single();
-    if (!error && data) { setTransactions(prev => prev.map(t => t.id === editTx.id ? data as Transaction : t)); setEditTx(null); }
+      .eq("id", editTx.id);
+    if (!error) { setEditTx(null); router.refresh(); }
     setSaving(false);
   }
 
