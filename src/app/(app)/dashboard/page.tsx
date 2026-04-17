@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, getPeriodStartStr } from "@/lib/utils";
-
-const SpendingChart = dynamic(() => import("@/components/dashboard/SpendingChart"), { ssr: false });
+import SpendingChartWrapper from "@/components/dashboard/SpendingChartWrapper";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -116,7 +114,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Pie chart */}
-      {chartData.length > 0 && <SpendingChart data={chartData} />}
+      {chartData.length > 0 && <SpendingChartWrapper data={chartData} />}
 
       {/* Budget overview */}
       {cats.length > 0 && (
