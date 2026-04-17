@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentMonth } from "@/lib/utils";
 import BudgetClient from "./BudgetClient";
 
 export default async function BudgetPage() {
@@ -13,26 +12,30 @@ export default async function BudgetPage() {
     .single();
 
   const householdId = profile?.household_id ?? null;
-  const month = getCurrentMonth();
 
-  const [{ data: categories }, { data: transactions }] = await Promise.all([
+  // Fetch 13 months of expense transactions for surplus calculation
+  const thirteenMonthsAgo = new Date();
+  thirteenMonthsAgo.setMonth(thirteenMonthsAgo.getMonth() - 13);
+  const fromDate = thirteenMonthsAgo.toISOString().split("T")[0];
+
+  const [{ data: categories }, { data: allTransactions }] = await Promise.all([
     householdId
       ? supabase.from("budget_categories").select("*").eq("household_id", householdId).order("name")
       : { data: [] },
     householdId
       ? supabase
           .from("transactions")
-          .select("amount, type, category_id")
+          .select("amount, type, category_id, date")
           .eq("household_id", householdId)
           .eq("type", "expense")
-          .gte("date", `${month}-01`)
+          .gte("date", fromDate)
       : { data: [] },
   ]);
 
   return (
     <BudgetClient
       categories={categories ?? []}
-      transactions={transactions ?? []}
+      allTransactions={allTransactions ?? []}
       householdId={householdId}
     />
   );

@@ -20,6 +20,9 @@ export interface BudgetCategory {
   color: string;
   icon: string;
   monthly_limit: number;
+  reset_frequency: "monthly" | "yearly";
+  reset_day: number;
+  reset_month: number;
   created_at: string;
 }
 
@@ -28,12 +31,32 @@ export interface Transaction {
   household_id: string;
   created_by: string;
   category_id: string | null;
+  recurring_id: string | null;
   amount: number;
   type: "income" | "expense";
   description: string;
   date: string;
   created_at: string;
   profiles?: Pick<Profile, "display_name" | "avatar_color">;
+  budget_categories?: Pick<BudgetCategory, "name" | "color" | "icon">;
+}
+
+export interface RecurringTransaction {
+  id: string;
+  household_id: string;
+  created_by: string;
+  category_id: string | null;
+  amount: number;
+  type: "income" | "expense";
+  description: string;
+  frequency: "weekly" | "monthly" | "yearly";
+  day_of_month: number;
+  month_of_year: number;
+  start_date: string;
+  end_date: string | null;
+  last_applied: string | null;
+  active: boolean;
+  created_at: string;
   budget_categories?: Pick<BudgetCategory, "name" | "color" | "icon">;
 }
 
