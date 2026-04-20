@@ -56,8 +56,10 @@ export default function SettingsClient({ profile, household, partner, userEmail 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault(); setSaving(true);
     const supabase = createClient();
-    await supabase.from("profiles").update({ display_name: displayName, avatar_color: avatarColor, avatar_url: avatarUrl }).eq("id", profile!.id);
-    setSaving(false); setSaved(true);
+    const { error } = await supabase.from("profiles").update({ display_name: displayName, avatar_color: avatarColor, avatar_url: avatarUrl }).eq("id", profile!.id);
+    setSaving(false);
+    if (error) { setUploadError(`Sparfel: ${error.message}`); return; }
+    setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     router.refresh();
   }
