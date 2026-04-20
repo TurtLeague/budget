@@ -40,10 +40,10 @@ export default function SettingsClient({ profile, household, partner, userEmail 
     setUploadError("");
     const supabase = createClient();
     const ext = file.name.split(".").pop();
-    const path = `avatars/${profile.id}.${ext}`;
+    const path = `${profile.id}.${ext}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
     if (error) {
-      setUploadError("Kunde inte ladda upp bilden. Kontrollera att 'avatars'-bucket finns i Supabase Storage och är publik.");
+      setUploadError(`Fel: ${error.message}`);
     } else {
       const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = `${publicUrl}?t=${Date.now()}`;
