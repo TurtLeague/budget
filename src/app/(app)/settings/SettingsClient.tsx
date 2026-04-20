@@ -136,7 +136,7 @@ export default function SettingsClient({ profile, household, partner, userEmail 
           </div>
           <button type="submit" disabled={saving}
             className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold rounded-xl py-3 transition-colors">
-            {saved ? "Sparat! ✓" : saving ? "Sparar..." : "Spara profil"}
+            {saved ? "Sparat! ❤️" : saving ? "Sparar..." : "Spara profil"}
           </button>
         </form>
       </div>
@@ -172,7 +172,7 @@ export default function SettingsClient({ profile, household, partner, userEmail 
                 <Avatar displayName={partner.display_name} avatarColor={partner.avatar_color} avatarUrl={partner.avatar_url} size="md" />
                 <div>
                   <p className="text-sm font-medium dark:text-slate-200">{partner.display_name}</p>
-                  <p className="text-xs text-gray-400 dark:text-slate-400">Din partner</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-400">Din partner ❤️</p>
                 </div>
               </div>
             ) : (

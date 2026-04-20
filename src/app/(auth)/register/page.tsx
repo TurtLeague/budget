@@ -29,9 +29,9 @@ export default function RegisterPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-slate-900 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">💰</div>
+          <div className="text-5xl mb-3">💕</div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Skapa konto</h1>
-          <p className="text-gray-500 dark:text-slate-400 mt-1">Kom igång med din hushållsbudget</p>
+          <p className="text-gray-500 dark:text-slate-400 mt-1">Kom igång med er hushållsbudget ❤️</p>
         </div>
         <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-6 space-y-4">
           {error && <div className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm rounded-xl p-3">{error}</div>}

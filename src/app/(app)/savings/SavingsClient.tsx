@@ -67,7 +67,7 @@ export default function SavingsClient({ initialGoals, householdId }: Props) {
 
       {goals.length > 0 && (
         <div className="bg-amber-400 rounded-2xl p-5 text-white mb-5">
-          <p className="text-sm font-medium text-amber-100">Totalt sparat</p>
+          <p className="text-sm font-medium text-amber-100">Totalt sparat ❤️</p>
           <p className="text-3xl font-bold mt-1">{formatCurrency(totalSaved)}</p>
           <p className="text-sm text-amber-100 mt-1">av {formatCurrency(totalTarget)} totalt mål</p>
           <div className="h-2 bg-amber-300/50 rounded-full mt-3 overflow-hidden">
@@ -90,7 +90,7 @@ export default function SavingsClient({ initialGoals, householdId }: Props) {
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ backgroundColor:`${goal.color}20` }}>{goal.icon}</div>
                   <div>
                     <p className="font-semibold dark:text-slate-200">{goal.name}</p>
-                    {done && <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full px-2 py-0.5">Klart! 🎉</span>}
+                    {done && <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full px-2 py-0.5">Klart! 🎉❤️</span>}
                     {daysLeft!==null && !done && <p className="text-xs text-gray-400 dark:text-slate-400">{daysLeft>0?`${daysLeft} dagar kvar`:"Deadline passerad"}</p>}
                   </div>
                 </div>

@@ -85,7 +85,7 @@ export default async function DashboardPage() {
           Hej, {profile?.display_name ?? "där"} 👋
         </h1>
         {profile?.households && (
-          <p className="text-sm text-gray-400 dark:text-slate-500">{(profile.households as { name: string }).name}</p>
+          <p className="text-sm text-gray-400 dark:text-slate-500">{(profile.households as { name: string }).name} ❤️</p>
         )}
       </div>
 
