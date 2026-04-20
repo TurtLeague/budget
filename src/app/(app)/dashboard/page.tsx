@@ -90,7 +90,8 @@ export default async function DashboardPage() {
       </div>
 
       {/* Balance card */}
-      <div className="bg-green-500 rounded-2xl p-5 text-white">
+      <div className="bg-green-500 rounded-2xl p-5 text-white relative overflow-hidden">
+        <span className="absolute top-3 right-4 text-4xl opacity-20 select-none">❤️</span>
         <p className="text-sm font-medium text-green-100">Månadssaldo</p>
         <p className="text-4xl font-bold mt-1">{formatCurrency(balance)}</p>
         <div className="flex gap-6 mt-4">

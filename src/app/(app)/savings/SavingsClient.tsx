@@ -66,8 +66,9 @@ export default function SavingsClient({ initialGoals, householdId }: Props) {
       )}
 
       {goals.length > 0 && (
-        <div className="bg-amber-400 rounded-2xl p-5 text-white mb-5">
-          <p className="text-sm font-medium text-amber-100">Totalt sparat ❤️</p>
+        <div className="bg-amber-400 rounded-2xl p-5 text-white mb-5 relative overflow-hidden">
+          <span className="absolute top-3 right-4 text-4xl opacity-20 select-none">❤️</span>
+          <p className="text-sm font-medium text-amber-100">Totalt sparat</p>
           <p className="text-3xl font-bold mt-1">{formatCurrency(totalSaved)}</p>
           <p className="text-sm text-amber-100 mt-1">av {formatCurrency(totalTarget)} totalt mål</p>
           <div className="h-2 bg-amber-300/50 rounded-full mt-3 overflow-hidden">

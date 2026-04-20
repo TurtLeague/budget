@@ -118,19 +118,23 @@ export default function OverviewClient({ transactions, categories, hasHousehold 
 
       {/* Key stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+          <span className="absolute top-2 right-3 text-lg opacity-10 select-none">❤️</span>
           <p className="text-xs text-gray-400 dark:text-slate-400 mb-1">Saldo</p>
           <p className={`text-xl font-bold ${balance >= 0 ? "text-green-500" : "text-red-500"}`}>{formatCurrency(balance)}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+          <span className="absolute top-2 right-3 text-lg opacity-10 select-none">🩷</span>
           <p className="text-xs text-gray-400 dark:text-slate-400 mb-1">Sparkvot</p>
           <p className={`text-xl font-bold ${savingsRate >= 0 ? "text-green-500" : "text-red-500"}`}>{savingsRate}%</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+          <span className="absolute top-2 right-3 text-lg opacity-10 select-none">💚</span>
           <p className="text-xs text-gray-400 dark:text-slate-400 mb-1">Inkomster</p>
           <p className="text-xl font-bold text-green-500">{formatCurrency(totalIncome)}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+          <span className="absolute top-2 right-3 text-lg opacity-10 select-none">🩷</span>
           <p className="text-xs text-gray-400 dark:text-slate-400 mb-1">Utgifter</p>
           <p className="text-xl font-bold text-red-500">{formatCurrency(totalExpense)}</p>
         </div>

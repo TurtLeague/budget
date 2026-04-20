@@ -25,6 +25,7 @@ export default function SettingsClient({ profile, household, partner, userEmail 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const [householdName, setHouseholdName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
@@ -36,11 +37,14 @@ export default function SettingsClient({ profile, household, partner, userEmail 
     const file = e.target.files?.[0];
     if (!file || !profile) return;
     setUploading(true);
+    setUploadError("");
     const supabase = createClient();
     const ext = file.name.split(".").pop();
-    const path = `${profile.id}.${ext}`;
+    const path = `avatars/${profile.id}.${ext}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (!error) {
+    if (error) {
+      setUploadError("Kunde inte ladda upp bilden. Kontrollera att 'avatars'-bucket finns i Supabase Storage och är publik.");
+    } else {
       const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = `${publicUrl}?t=${Date.now()}`;
       await supabase.from("profiles").update({ avatar_url: url }).eq("id", profile.id);
@@ -118,6 +122,9 @@ export default function SettingsClient({ profile, household, partner, userEmail 
             <p className="text-sm text-gray-400 dark:text-slate-400">{userEmail}</p>
           </div>
         </div>
+        {uploadError && (
+          <div className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs rounded-xl p-3 mb-4">{uploadError}</div>
+        )}
 
         <form onSubmit={saveProfile} className="space-y-4">
           <div>
@@ -168,11 +175,17 @@ export default function SettingsClient({ profile, household, partner, userEmail 
             </div>
 
             {partner ? (
-              <div className="flex items-center gap-3">
-                <Avatar displayName={partner.display_name} avatarColor={partner.avatar_color} avatarUrl={partner.avatar_url} size="md" />
-                <div>
-                  <p className="text-sm font-medium dark:text-slate-200">{partner.display_name}</p>
-                  <p className="text-xs text-gray-400 dark:text-slate-400">Din partner ❤️</p>
+              <div className="flex flex-col items-center py-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col items-center gap-1">
+                    <Avatar displayName={displayName} avatarColor={avatarColor} avatarUrl={avatarUrl} size="md" />
+                    <p className="text-xs font-medium dark:text-slate-300">{displayName}</p>
+                  </div>
+                  <span className="text-2xl">❤️</span>
+                  <div className="flex flex-col items-center gap-1">
+                    <Avatar displayName={partner.display_name} avatarColor={partner.avatar_color} avatarUrl={partner.avatar_url} size="md" />
+                    <p className="text-xs font-medium dark:text-slate-300">{partner.display_name}</p>
+                  </div>
                 </div>
               </div>
             ) : (
